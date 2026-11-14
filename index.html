@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AETHER-X LITE // Zero-Lag Benchmark & Gamer Lab</title>
+    <style>
+        /* ==========================================================================
+           1. LIGHTWEIGHT ZERO-LAG DESIGN TOKENS (NO HEAVY BACKDROP BLURS)
+           ========================================================================== */
+        :root {
+            --bg-base: #070b14;
+            --bg-card: #0e1526;
+            --bg-card-alt: #131c31;
+            --bg-input: #090e1a;
+            --border: #1e293b;
+            --border-accent: rgba(0, 240, 255, 0.38);
+            --cyan: #00f0ff;
+            --emerald: #00e68a;
+            --amber: #ffb800;
+            --crimson: #ff3366;
+            --purple: #a855f7;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --text-muted: #64748b;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100%;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+            line-height: 1.45;
+        }
+
+        /* ==========================================================================
+           2. APP SHELL & STICKY HEADER
+           ========================================================================== */
+        .app-shell {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 12px 12px 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .top-header {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .brand-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-led {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--emerald);
+            box-shadow: 0 0 10px var(--emerald);
+            flex-shrink: 0;
+        }
+
+        .status-led.gpu-hot {
+            background: var(--crimson);
+            box-shadow: 0 0 12px var(--crimson);
+        }
+
+        .brand-title {
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: var(--text-main);
+        }
+
+        .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            color: var(--emerald);
+            display: block;
+        }
+
+        .brand-sub.gpu-hot {
+            color: var(--crimson);
+        }
+
+        /* ==========================================================================
+           3. MOBILE-FRIENDLY TOUCH NAVIGATION TABS
+           ========================================================================== */
+        .tab-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 6px;
+            position: sticky;
+            top: 8px;
+            z-index: 30;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            color: var(--text-sub);
+            font-family: var(--font-sans);
+            font-size: 0.74rem;
+            font-weight: 700;
+            padding: 10px 4px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .tab-btn .tab-icon {
+            font-size: 1.05rem;
+        }
+
+        .tab-btn.active {
+            background: var(--bg-card-alt);
+            border-color: var(--border-accent);
+            color: var(--cyan);
+        }
+
+        /* ==========================================================================
+           4. CARDS, METRIC GRIDS & CONTROLS
+           ========================================================================== */
+        .tab-panel {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tab-panel.active {
+            display: flex;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--cyan);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .badge {
+            font-family: var(--font-mono);
+            font-size: 0.66rem;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(0, 240, 255, 0.12);
+            color: var(--cyan);
+            border: 1px solid rgba(0, 240, 255, 0.28);
+            white-space: nowrap;
+        }
+
+        .badge.green {
+            background: rgba(0, 230, 138, 0.12);
+            color: var(--emerald);
+            border-color: rgba(0, 230, 138, 0.3);
+        }
+
+        .badge.amber {
+            background: rgba(255, 184, 0, 0.14);
+            color: var(--amber);
+            border-color: rgba(255, 184, 0, 0.32);
+        }
+
+        .badge.red {
+            background: rgba(255, 51, 102, 0.14);
+            color: var(--crimson);
+            border-color: rgba(255, 51, 102, 0.35);
+        }
+
+        .stat-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .stat-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .stat-tile {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .stat-label {
+            font-family: var(--font-mono);
+            font-size: 0.64rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .stat-value {
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .stat-value.cyan { color: var(--cyan); }
+        .stat-value.green { color: var(--emerald); }
+        .stat-value.amber { color: var(--amber); }
+        .stat-value.red { color: var(--crimson); }
+
+        .spec-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 7px;
+            border-bottom: 1px solid rgba(30, 41, 59, 0.65);
+            font-size: 0.82rem;
+        }
+
+        .spec-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .spec-k {
+            color: var(--text-sub);
+            flex-shrink: 0;
+        }
+
+        .spec-v {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-align: right;
+            word-break: break-word;
+        }
+
+        /* Touch-Friendly Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            background: var(--bg-card-alt);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
+            min-height: 44px;
+        }
+
+        .btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: rgba(0, 240, 255, 0.14);
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .btn-start {
+            background: rgba(0, 230, 138, 0.16);
+            border-color: var(--emerald);
+            color: var(--emerald);
+        }
+
+        .btn-stop {
+            background: rgba(255, 51, 102, 0.18);
+            border-color: var(--crimson);
+            color: var(--crimson);
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        /* ==========================================================================
+           5. DEDICATED 3D VOLUME SHADER VIEWPORT (OFF BY DEFAULT)
+           ========================================================================== */
+        .shader-viewport-box {
+            position: relative;
+            width: 100%;
+            height: 290px;
+            background: #04070e;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        @media (min-width: 640px) {
+            .shader-viewport-box {
+                height: 350px;
+            }
+        }
+
+        #shaderCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: none;
+            cursor: grab;
+        }
+
+        #shaderCanvas:active {
+            cursor: grabbing;
+        }
+
+        .shader-idle-cover {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, #0e172a 0%, #050811 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            gap: 10px;
+            z-index: 5;
+        }
+
+        .shader-idle-cover.hidden {
+            display: none;
+        }
+
+        .shader-hud-pill {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .hud-tag {
+            background: rgba(7, 11, 20, 0.85);
+            border: 1px solid var(--border);
+            padding: 4px 9px;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .control-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-sub);
+        }
+
+        select.cyber-select {
+            width: 100%;
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 700;
+            min-height: 44px;
+            outline: none;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 99px;
+            border: 1px solid var(--border);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--cyan);
+            cursor: pointer;
+        }
+
+        .pill-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .pill-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-sub);
+            border-radius: 8px;
+            padding: 8px 4px;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .pill-btn.active {
+            background: rgba(0, 240, 255, 0.15);
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        /* Progress Bar */
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--cyan), var(--emerald));
+            transition: width 0.2s ease;
+        }
+
+        /* ==========================================================================
+           6. TOUCH POLLING & REACTION TEST PADS
+           ========================================================================== */
+        .interactive-pad {
+            background: var(--bg-input);
+            border: 1px dashed var(--border-accent);
+            border-radius: 12px;
+            padding: 20px 14px;
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            cursor: pointer;
+            touch-action: none;
+            user-select: none;
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .interactive-pad.wait {
+            background: rgba(255, 51, 102, 0.16);
+            border-color: var(--crimson);
+            color: var(--crimson);
+        }
+
+        .interactive-pad.go {
+            background: rgba(0, 230, 138, 0.22);
+            border-color: var(--emerald);
+            color: var(--emerald);
+        }
+
+        /* Toast Notification */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--cyan);
+            color: #050811;
+            font-family: var(--font-mono);
+            font-size: 0.76rem;
+            font-weight: 800;
+            padding: 10px 18px;
+            border-radius: 999px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 100;
+            white-space: nowrap;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <!-- TOP HEADER -->
+        <header class="top-header">
+            <div class="brand-wrap">
+                <div id="statusLed" class="status-led"></div>
+                <div>
+                    <div class="brand-title">AETHER-X LITE // GAMER LAB</div>
+                    <span id="gpuStateBanner" class="brand-sub">● ZERO-LAG MODE (3D GPU IDLE)</span>
+                </div>
+            </div>
+            <button id="btnCopyAll" class="btn" style="padding: 8px 12px; min-height: 38px;">
+                📋 COPY SPEC
+            </button>
+        </header>
+
+        <!-- 4 MOBILE-OPTIMIZED TABS -->
+        <nav class="tab-bar" role="tablist">
+            <button class="tab-btn active" data-target="tab-sys">
+                <span class="tab-icon">⚡</span>
+                <span>System</span>
+            </button>
+            <button class="tab-btn" data-target="tab-3d">
+                <span class="tab-icon">🧊</span>
+                <span>3D Shader</span>
+            </button>
+            <button class="tab-btn" data-target="tab-cpu">
+                <span class="tab-icon">🧠</span>
+                <span>CPU/RAM</span>
+            </button>
+            <button class="tab-btn" data-target="tab-net">
+                <span class="tab-icon">🌐</span>
+                <span>Ping/Touch</span>
+            </button>
+        </nav>
+
+        <!-- ======================================================================
+             TAB 1: SYSTEM & DISPLAY TELEMETRY (DEFAULT - ZERO GPU LOAD)
+             ====================================================================== -->
+        <section id="tab-sys" class="tab-panel active">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📱 Live UI Refresh Rate & Display</span>
+                    <span id="hzBadge" class="badge green">DETECTING HZ...</span>
+                </div>
+                <div class="stat-grid-3">
+                    <div class="stat-tile">
+                        <span class="stat-label">Screen Hz</span>
+                        <span id="sysUiFps" class="stat-value green">-- FPS</span>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="stat-label">Resolution</span>
+                        <span id="sysRes" class="stat-value">--</span>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="stat-label">Pixel Ratio</span>
+                        <span id="sysDpr" class="stat-value cyan">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🎮 Detected Hardware Profile</span>
+                    <span class="badge">ZERO-LOAD SCAN</span>
+                </div>
+                <div class="spec-list">
+                    <div class="spec-row">
+                        <span class="spec-k">Graphics GPU</span>
+                        <span id="sysGpu" class="spec-v" style="color: var(--cyan);">Scanning...</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-k">GPU Vendor</span>
+                        <span id="sysGpuVendor" class="spec-v">--</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-k">Processor Cores</span>
+                        <span id="sysCpuCores" class="spec-v">--</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-k">Platform / OS</span>
+                        <span id="sysOs" class="spec-v">--</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-k">Device Memory (RAM)</span>
+                        <span id="sysRam" class="spec-v">--</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-k">Storage Quota</span>
+                        <span id="sysStorage" class="spec-v">Calculating...</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-k">Battery & Power</span>
+                        <span id="sysBattery" class="spec-v">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="border-color: var(--border-accent);">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                    <div>
+                        <div style="font-family: var(--font-mono); font-size: 0.78rem; font-weight: 800; color: var(--text-main);">
+                            🧊 Ready to Test 3D GPU Power?
+                        </div>
+                        <div style="font-size: 0.76rem; color: var(--text-sub); margin-top: 2px;">
+                            3D Volume Shader stays OFF until you open the 3D Shader tab and press Start.
+                        </div>
+                    </div>
+                    <button id="btnJump3D" class="btn btn-primary">OPEN 3D SHADER TAB →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================================
+             TAB 2: DEDICATED 3D VOLUME SHADER BM STRESS TEST (OFF BY DEFAULT)
+             ====================================================================== -->
+        <section id="tab-3d" class="tab-panel">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🧊 3D Volume Shader BM Test</span>
+                    <span id="shaderStatusBadge" class="badge">IDLE (0% GPU)</span>
+                </div>
+
+                <!-- Dedicated Contained 3D Canvas Box -->
+                <div class="shader-viewport-box">
+                    <canvas id="shaderCanvas"></canvas>
+
+                    <div id="shaderHudPill" class="shader-hud-pill" style="display: none;">
+                        <span id="hudLiveFps" class="hud-tag" style="color: var(--emerald);">-- FPS</span>
+                        <span id="hudLiveRes" class="hud-tag">-- × --</span>
+                    </div>
+
+                    <!-- Idle Cover Overlay (Displayed by default so GPU does zero work) -->
+                    <div id="shaderIdleCover" class="shader-idle-cover">
+                        <div style="font-size: 2rem;">🧊</div>
+                        <div style="font-family: var(--font-mono); font-weight: 800; font-size: 0.9rem; color: var(--text-main);">
+                            3D VOLUMETRIC FRACTAL ENGINE READY
+                        </div>
+                        <div style="font-size: 0.76rem; color: var(--text-sub); max-width: 340px;">
+                            Engine is paused to keep your phone cool and lag-free. Tap Start below to run the 3D raymarched Volume Shader test.
+                        </div>
+                        <button id="btnOverlayStart" class="btn btn-start" style="margin-top: 4px;">
+                            ▶ START 3D SHADER TEST
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Start / Stop & 30s Benchmark Action Row -->
+                <div class="stat-grid-2">
+                    <button id="btnToggle3D" class="btn btn-start">
+                        ▶ START 3D SHADER
+                    </button>
+                    <button id="btnBench30s" class="btn btn-primary">
+                        🔥 30s GPU BENCHMARK
+                    </button>
+                </div>
+
+                <!-- 30s Benchmark Progress Bar -->
+                <div id="bench30Wrap" style="display: none; margin-top: 10px;">
+                    <div class="control-label-row">
+                        <span style="color: var(--amber); font-weight: 700;">30s STRESS TEST RUNNING...</span>
+                        <span id="bench30Timer" style="color: var(--cyan); font-weight: 800;">30.0s</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div id="bench30Bar" class="progress-bar-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Live 3D FPS Metrics -->
+                <div class="stat-grid-3" style="margin-top: 12px;">
+                    <div class="stat-tile">
+                        <span class="stat-label">3D Live FPS</span>
+                        <span id="val3dFps" class="stat-value green">--</span>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="stat-label">Frame Time</span>
+                        <span id="val3dMs" class="stat-value cyan">-- ms</span>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="stat-label">1% Low FPS</span>
+                        <span id="val3dLow1" class="stat-value amber">--</span>
+                    </div>
+                </div>
+
+                <!-- Benchmark Score Banner -->
+                <div class="stat-tile" style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span class="stat-label">30s Volume Shader Score</span>
+                        <span id="val3dScore" class="stat-value cyan">NOT TESTED</span>
+                    </div>
+                    <span id="val3dTier" class="badge">READY</span>
+                </div>
+
+                <!-- Mobile-Safe Quality Presets & Controls -->
+                <div class="control-group">
+                    <div class="control-label-row">
+                        <span>QUALITY PRESET (MOBILE SAFE → EXTREME)</span>
+                    </div>
+                    <select id="presetQuality" class="cyber-select">
+                        <option value="eco" selected>1. Eco / Mobile Safe (48 Steps, 0.75x Scale)</option>
+                        <option value="balanced">2. Balanced Gaming (80 Steps, 1.0x Scale)</option>
+                        <option value="heavy">3. Heavy Flagship (128 Steps, 1.25x Scale)</option>
+                        <option value="extreme">4. Extreme Volume Shader BM (192 Steps, 1.5x)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label-row">
+                        <span>RAYMARCH STEPS (SHADER COMPLEXITY)</span>
+                        <span id="lblSteps" style="color: var(--cyan); font-weight: 800;">48 STEPS</span>
+                    </div>
+                    <input type="range" id="sliderSteps" min="32" max="192" step="16" value="48">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label-row">
+                        <span>RENDER RESOLUTION SCALE</span>
+                        <span id="lblScale" style="color: var(--emerald); font-weight: 800;">0.75x</span>
+                    </div>
+                    <div class="pill-row">
+                        <button class="pill-btn" data-scale="0.5">0.5x</button>
+                        <button class="pill-btn active" data-scale="0.75">0.75x</button>
+                        <button class="pill-btn" data-scale="1.0">1.0x</button>
+                        <button class="pill-btn" data-scale="1.5">1.5x</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================================
+             TAB 3: CPU, RAM & STORAGE SPEED BENCHMARKS
+             ====================================================================== -->
+        <section id="tab-cpu" class="tab-panel">
+            <!-- CPU Multi-Core Benchmark -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🧠 Multi-Core CPU Benchmark</span>
+                    <span id="cpuThreadBadge" class="badge">-- CORES</span>
+                </div>
+                <div class="stat-grid-3" style="margin-bottom: 10px;">
+                    <div class="stat-tile">
+                        <span class="stat-label">Single-Core</span>
+                        <span id="cpuSingleScore" class="stat-value cyan">--</span>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="stat-label">Multi-Core</span>
+                        <span id="cpuMultiScore" class="stat-value green">--</span>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="stat-label">Compute</span>
+                        <span id="cpuGflopsVal" class="stat-value amber">-- GFLOPS</span>
+                    </div>
+                </div>
+                <button id="btnRunCpu" class="btn btn-primary btn-full">
+                    🚀 RUN CPU SINGLE & MULTI-CORE TEST
+                </button>
+            </div>
+
+            <!-- RAM Bandwidth Test -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">⚡ RAM Allocation & Bandwidth</span>
+                    <span id="ramTierBadge" class="badge">-- GB</span>
+                </div>
+                <div class="stat-grid-2" style="margin-bottom: 10px;">
+                    <div class="stat-tile">
+                        <span class="stat-label">JS Heap Used</span>
+                        <span id="ramHeapVal" class="stat-value">-- MB</span>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="stat-label">Memory Speed</span>
+                        <span id="ramSpeedVal" class="stat-value green">Not Tested</span>
+                    </div>
+                </div>
+                <button id="btnRunRam" class="btn btn-full">
+                    ⚡ TEST RAM BANDWIDTH (64MB SWEEP)
+                </button>
+            </div>
+
+            <!-- Storage Read/Write I/O Test -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">💽 Storage Read / Write I/O</span>
+                    <span id="storageQuotaBadge" class="badge">--</span>
+                </div>
+                <div class="stat-grid-2" style="margin-bottom: 10px;">
+                    <div class="stat-tile">
+                        <span class="stat-label">Sequential Write</span>
+                        <span id="diskWriteVal" class="stat-value cyan">-- MB/s</span>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="stat-label">Sequential Read</span>
+                        <span id="diskReadVal" class="stat-value green">-- MB/s</span>
+                    </div>
+                </div>
+                <button id="btnRunDisk" class="btn btn-full">
+                    💽 TEST STORAGE I/O SPEED (8MB BLOCK)
+                </button>
+            </div>
+        </section>
+
+        <!-- ======================================================================
+             TAB 4: WI-FI PING, SPEED & GAMER TOUCH / REFLEX TESTER
+             ====================================================================== -->
+        <section id="tab-net" class="tab-panel">
+            <!-- Wi-Fi Ping & Download Speed -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📡 Gaming Ping, Jitter & Speed</span>
+                    <span id="netStatusBadge" class="badge green">ONLINE</span>
+                </div>
+                <div class="stat-grid-3" style="margin-bottom: 10px;">
+                    <div class="stat-tile">
+                        <span class="stat-label">Ping (RTT)</span>
+                        <span id="netPing" class="stat-value green">-- ms</span>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="stat-label">Jitter</span>
+                        <span id="netJitter" class="stat-value cyan">-- ms</span>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="stat-label">Download</span>
+                        <span id="netSpeed" class="stat-value amber">-- Mbps</span>
+                    </div>
+                </div>
+                <div class="stat-grid-2">
+                    <button id="btnPingBurst" class="btn">📶 PING & JITTER TEST</button>
+                    <button id="btnSpeedTest" class="btn btn-primary">⚡ DOWNLOAD SPEED</button>
+                </div>
+            </div>
+
+            <!-- Touch Screen Polling Rate (Hz) Tester -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">👆 Touch / Mouse Polling Rate</span>
+                    <span id="pollPeakBadge" class="badge">PEAK: -- HZ</span>
+                </div>
+                <div class="stat-tile" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <span class="stat-label" style="margin: 0;">Current Touch Response</span>
+                    <span id="pollLiveVal" class="stat-value cyan">Swipe Pad Below</span>
+                </div>
+                <div id="touchPollPad" class="interactive-pad">
+                    👆 SWIPE FINGER RAPIDLY HERE TO MEASURE TOUCH HZ (60Hz / 120Hz / 240Hz+)
+                </div>
+            </div>
+
+            <!-- Esports Reaction Time Tester -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🎯 Esports Reflex Latency</span>
+                    <span id="reflexBestBadge" class="badge green">BEST: -- MS</span>
+                </div>
+                <div id="reflexPad" class="interactive-pad">
+                    🎯 TAP HERE TO START REACTION TIME TEST
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="toast">Copied to Clipboard!</div>
+
+    <script>
+        /* ==========================================================================
+           1. GLOBAL APPLICATION STATE (ZERO-LAG BY DEFAULT)
+           ========================================================================== */
+        const STATE = {
+            activeTab: 'tab-sys',
+            // 3D Shader Engine State (strictly OFF by default!)
+            is3DRunning: false,
+            raf3DId: null,
+            maxSteps: 48,
+            resScale: 0.75,
+            yaw: 0.55,
+            pitch: 0.25,
+            dist: 2.75,
+            dragging: false,
+            lastX: 0,
+            lastY: 0,
+            pinchDist: 0,
+            fps3D: 0,
+            ms3D: 0,
+            samples3D: [],
+            bench30Active: false,
+            bench30Start: 0,
+            bench30Times: [],
+            gpuScore: null,
+            gpuTier: null,
+
+            // Hardware Specs
+            uiHz: 60,
+            gpuModel: 'Detecting...',
+            gpuVendor: 'Detecting...',
+            cpuCores: navigator.hardwareConcurrency || 4,
+            osName: 'Unknown OS',
+            ramLabel: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Protected (4-8+ GB)',
+            storageLabel: 'Checking...',
+            batteryLabel: 'AC / Desktop',
+
+            // Benchmark Results
+            cpuSingle: null,
+            cpuMulti: null,
+            cpuGflops: null,
+            ramSpeed: null,
+            diskWrite: null,
+            diskRead: null,
+            pingMs: null,
+            jitterMs: null,
+            downMbps: null,
+            peakTouchHz: 0,
+            bestReflexMs: null
+        };
+
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2500);
+        }
+
+        /* ==========================================================================
+           2. TAB SWITCHING WITH AUTOMATIC 3D GPU PAUSE ON EXIT
+           ========================================================================== */
+        function switchTab(targetId) {
+            STATE.activeTab = targetId;
+
+            document.querySelectorAll('.tab-btn').forEach((btn) => {
+                btn.classList.toggle('active', btn.dataset.target === targetId);
+            });
+            document.querySelectorAll('.tab-panel').forEach((panel) => {
+                panel.classList.toggle('active', panel.id === targetId);
+            });
+
+            // CRITICAL MOBILE PROTECTION: Immediately stop 3D GPU loop when leaving 3D tab!
+            if (targetId !== 'tab-3d' && STATE.is3DRunning) {
+                stop3DShader(true);
+            }
+        }
+
+        document.querySelectorAll('.tab-btn').forEach((btn) => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.target));
+        });
+
+        document.getElementById('btnJump3D').addEventListener('click', () => {
+            switchTab('tab-3d');
+        });
+
+        // Also stop 3D GPU if user switches browser tabs or locks phone screen
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && STATE.is3DRunning) {
+                stop3DShader(true);
+            }
+        });
+
+        /* ==========================================================================
+           3. TAB 1: ZERO-LOAD SYSTEM & HARDWARE DETECTION
+           ========================================================================== */
+        function initSystemTelemetry() {
+            // 1. One-time lightweight WebGL info probe (creates & immediately destroys context)
+            try {
+                const probeCanvas = document.createElement('canvas');
+                const glProbe = probeCanvas.getContext('webgl');
+                if (glProbe) {
+                    const ext = glProbe.getExtension('WEBGL_debug_renderer_info');
+                    if (ext) {
+                        const rawGpu = glProbe.getParameter(ext.UNMASKED_RENDERER_WEBGL) || 'WebGL GPU';
+                        STATE.gpuModel = rawGpu.replace(/ANGLE \(|, Direct3D.*|\)/g, '').trim();
+                        STATE.gpuVendor = glProbe.getParameter(ext.UNMASKED_VENDOR_WEBGL) || 'Standard';
+                    } else {
+                        STATE.gpuModel = glProbe.getParameter(glProbe.RENDERER) || 'Standard GPU';
+                        STATE.gpuVendor = glProbe.getParameter(glProbe.VENDOR) || 'Standard';
+                    }
+                    const loseExt = glProbe.getExtension('WEBGL_lose_context');
+                    if (loseExt) loseExt.loseContext();
+                }
+            } catch {
+                STATE.gpuModel = 'Protected WebGL GPU';
+            }
+
+            document.getElementById('sysGpu').textContent = STATE.gpuModel;
+            document.getElementById('sysGpuVendor').textContent = STATE.gpuVendor;
+
+            // 2. CPU & OS Info
+            const ua = navigator.userAgent;
+            if (/Android/i.test(ua)) STATE.osName = 'Android OS';
+            else if (/iPhone|iPad/i.test(ua)) STATE.osName = 'iOS / iPadOS';
+            else if (/Windows/i.test(ua)) STATE.osName = 'Windows';
+            else if (/Mac/i.test(ua)) STATE.osName = 'macOS';
+            else if (/Linux/i.test(ua)) STATE.osName = 'Linux';
+
+            document.getElementById('sysCpuCores').textContent = `${STATE.cpuCores} Logical Cores`;
+            document.getElementById('cpuThreadBadge').textContent = `${STATE.cpuCores} CORES`;
+            document.getElementById('sysOs').textContent = STATE.osName;
+
+            // 3. Display Resolution & DPR
+            const dpr = (window.devicePixelRatio || 1).toFixed(2);
+            document.getElementById('sysRes').textContent = `${screen.width}×${screen.height}`;
+            document.getElementById('sysDpr').textContent = `${dpr}x`;
+
+            // 4. RAM & Storage Estimate
+            document.getElementById('sysRam').textContent = STATE.ramLabel;
+            document.getElementById('ramTierBadge').textContent = STATE.ramLabel;
+
+            if (navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then((est) => {
+                    const usedMb = ((est.usage || 0) / 1048576).toFixed(1);
+                    const totalGb = ((est.quota || 0) / 1073741824).toFixed(1);
+                    STATE.storageLabel = `${usedMb} MB / ${totalGb} GB`;
+                    document.getElementById('sysStorage').textContent = STATE.storageLabel;
+                    document.getElementById('storageQuotaBadge').textContent = `${totalGb} GB QUOTA`;
+                });
+            }
+
+            // 5. Battery Status
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then((bat) => {
+                    const updateBat = () => {
+                        STATE.batteryLabel = `${Math.round(bat.level * 100)}% (${bat.charging ? 'Charging ⚡' : 'Battery 🔋'})`;
+                        document.getElementById('sysBattery').textContent = STATE.batteryLabel;
+                    };
+                    updateBat();
+                    bat.addEventListener('levelchange', updateBat);
+                    bat.addEventListener('chargingchange', updateBat);
+                });
+            } else {
+                document.getElementById('sysBattery').textContent = STATE.batteryLabel;
+            }
+
+            // 6. Lightweight 1-second UI Refresh Rate (Hz) check (stops automatically after 1s!)
+            let frameCount = 0;
+            const startT = performance.now();
+            function measureUiHz(now) {
+                frameCount++;
+                if (now - startT < 1000) {
+                    requestAnimationFrame(measureUiHz);
+                } else {
+                    const raw = Math.round(frameCount);
+                    const commonHz = [60, 75, 90, 120, 144, 165, 240];
+                    const snapped = commonHz.reduce((a, b) => Math.abs(b - raw) < Math.abs(a - raw) ? b : a);
+                    STATE.uiHz = Math.abs(snapped - raw) <= 6 ? snapped : raw;
+                    document.getElementById('hzBadge').textContent = `${STATE.uiHz} HZ DISPLAY`;
+                    document.getElementById('sysUiFps').textContent = `${STATE.uiHz} FPS`;
+                }
+            }
+            requestAnimationFrame(measureUiHz);
+        }
+
+        /* ==========================================================================
+           4. TAB 2: ON-DEMAND 3D VOLUME SHADER BM ENGINE (ZERO BACKGROUND LOAD)
+           ========================================================================== */
+        const shaderCanvas = document.getElementById('shaderCanvas');
+        let gl = null;
+        let program = null;
+        let uniforms = {};
+
+        const VS_CODE = `
+            attribute vec2 a_pos;
+            void main() {
+                gl_Position = vec4(a_pos, 0.0, 1.0);
+            }
+        `;
+
+        // Raymarched Volumetric Mandelbulb + God-Ray Scattering Shader
+        const FS_CODE = `
+            precision highp float;
+            uniform vec2 u_res;
+            uniform float u_time;
+            uniform vec3 u_camPos;
+            uniform int u_maxSteps;
+
+            mat2 rot(float a) {
+                float s = sin(a), c = cos(a);
+                return mat2(c, -s, s, c);
+            }
+
+            vec2 mapMandelbulb(vec3 p) {
+                vec3 z = p;
+                float dr = 1.0;
+                float r = 0.0;
+                float trap = 1e10;
+                float power = 8.0 + sin(u_time * 0.45) * 1.25;
+
+                for (int i = 0; i < 10; i++) {
+                    r = length(z);
+                    if (r > 2.1) break;
+                    trap = min(trap, abs(z.y) + 0.35 * length(z.xz));
+
+                    float theta = acos(clamp(z.z / max(r, 0.0001), -1.0, 1.0));
+                    float phi = atan(z.y, z.x);
+                    dr = pow(r, power - 1.0) * power * dr + 1.0;
+
+                    float zr = pow(r, power);
+                    theta *= power;
+                    phi = phi * power + u_time * 0.25;
+
+                    z = zr * vec3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta)) + p;
+                }
+                return vec2(0.5 * log(max(r, 0.0001)) * r / dr, trap);
+            }
+
+            vec3 calcNormal(vec3 p) {
+                vec2 e = vec2(0.0016, -0.0016);
+                return normalize(
+                    e.xyy * mapMandelbulb(p + e.xyy).x +
+                    e.yyx * mapMandelbulb(p + e.yyx).x +
+                    e.yxy * mapMandelbulb(p + e.yxy).x +
+                    e.xxx * mapMandelbulb(p + e.xxx).x
+                );
+            }
+
+            float volumeFog(vec3 p) {
+                vec3 q = p;
+                q.xz *= rot(u_time * 0.18);
+                float wave = sin(q.x * 3.0 + u_time) * cos(q.y * 3.0) * sin(q.z * 3.0);
+                float falloff = smoothstep(2.5, 0.4, length(p));
+                return max(0.0, (wave * 0.45 + 0.35) * falloff);
+            }
+
+            void main() {
+                vec2 uv = (gl_FragCoord.xy - 0.5 * u_res.xy) / u_res.y;
+                vec3 ro = u_camPos;
+                vec3 ww = normalize(-ro);
+                vec3 uu = normalize(cross(ww, vec3(0.0, 1.0, 0.0)));
+                vec3 vv = normalize(cross(uu, ww));
+                vec3 rd = normalize(uv.x * uu + uv.y * vv + 1.45 * ww);
+
+                vec3 lightPos = vec3(2.2 * cos(u_time * 0.6), 1.4, 2.2 * sin(u_time * 0.6));
+                vec3 lightDir = normalize(lightPos);
+
+                float t = 0.0;
+                float trap = 0.0;
+                float minD = 1e10;
+                bool hit = false;
+
+                for (int i = 0; i < 192; i++) {
+                    if (i >= u_maxSteps) break;
+                    vec3 p = ro + rd * t;
+                    vec2 res = mapMandelbulb(p);
+                    minD = min(minD, res.x);
+                    if (res.x < 0.0014 * (1.0 + t * 0.35)) {
+                        hit = true;
+                        trap = res.y;
+                        break;
+                    }
+                    if (t > 6.0) break;
+                    t += res.x * 0.85;
+                }
+
+                vec3 bg = vec3(0.015, 0.024, 0.048);
+                vec3 col = bg;
+
+                if (hit) {
+                    vec3 p = ro + rd * t;
+                    vec3 n = calcNormal(p);
+                    vec3 v = -rd;
+                    float diff = max(dot(n, lightDir), 0.0);
+                    float fresnel = pow(1.0 - max(dot(n, v), 0.0), 3.0);
+                    vec3 h = normalize(lightDir + v);
+                    float spec = pow(max(dot(n, h), 0.0), 36.0);
+
+                    vec3 c1 = vec3(0.0, 0.9, 1.0);
+                    vec3 c2 = vec3(1.0, 0.2, 0.5);
+                    vec3 albedo = mix(c1, c2, clamp(trap * 1.3, 0.0, 1.0));
+
+                    col = albedo * (0.16 + diff * 0.95) + vec3(0.6, 0.95, 1.0) * fresnel * 0.8 + vec3(1.0) * spec * 0.7;
+                    col = mix(col, bg, 1.0 - exp(-t * 0.22));
+                } else {
+                    col += vec3(0.0, 0.85, 1.0) * exp(-minD * 13.0) * 0.45;
+                }
+
+                // 18-pass Volumetric Light Scattering
+                const int VOL_PASSES = 18;
+                float maxV = hit ? t : 4.5;
+                float dtV = maxV / float(VOL_PASSES);
+                float vt = dtV * 0.5;
+                vec3 volCol = vec3(0.0);
+
+                for (int j = 0; j < VOL_PASSES; j++) {
+                    vec3 vp = ro + rd * vt;
+                    float dens = volumeFog(vp);
+                    vec3 toL = lightPos - vp;
+                    float dL = length(toL);
+                    float phase = pow(max(dot(rd, toL / max(dL, 0.001)), 0.0), 3.0) + 0.25;
+                    volCol += mix(vec3(0.0, 0.85, 1.0), vec3(1.0, 0.22, 0.55), 0.4) * dens * phase * dtV * 0.75;
+                    vt += dtV;
+                }
+
+                col += volCol;
+                col = pow(clamp(col, 0.0, 1.0), vec3(0.9));
+                gl_FragColor = vec4(col, 1.0);
+            }
+        `;
+
+        function setupWebGLContext() {
+            if (gl && program) return true;
+            gl = shaderCanvas.getContext('webgl', { antialias: false, powerPreference: 'high-performance' });
+            if (!gl) return false;
+
+            const compile = (type, src) => {
+                const s = gl.createShader(type);
+                gl.shaderSource(s, src);
+                gl.compileShader(s);
+                return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
+            };
+
+            const vs = compile(gl.VERTEX_SHADER, VS_CODE);
+            const fs = compile(gl.FRAGMENT_SHADER, FS_CODE);
+            if (!vs || !fs) return false;
+
+            program = gl.createProgram();
+            gl.attachShader(program, vs);
+            gl.attachShader(program, fs);
+            gl.linkProgram(program);
+            gl.useProgram(program);
+
+            const buf = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+
+            const aPos = gl.getAttribLocation(program, 'a_pos');
+            gl.enableVertexAttribArray(aPos);
+            gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+            uniforms = {
+                res: gl.getUniformLocation(program, 'u_res'),
+                time: gl.getUniformLocation(program, 'u_time'),
+                camPos: gl.getUniformLocation(program, 'u_camPos'),
+                maxSteps: gl.getUniformLocation(program, 'u_maxSteps')
+            };
+            return true;
+        }
+
+        function resize3DCanvas() {
+            if (!gl) return;
+            const rect = shaderCanvas.getBoundingClientRect();
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const w = Math.max(240, Math.floor((rect.width || 320) * dpr * STATE.resScale));
+            const h = Math.max(180, Math.floor((rect.height || 280) * dpr * STATE.resScale));
+            shaderCanvas.width = w;
+            shaderCanvas.height = h;
+            gl.viewport(0, 0, w, h);
+            document.getElementById('hudLiveRes').textContent = `${w}×${h}`;
+        }
+
+        let prev3DTime = 0;
+        let last3DHudUpdate = 0;
+
+        function loop3DShader(now) {
+            if (!STATE.is3DRunning) return;
+
+            const dt = Math.max(0.5, now - prev3DTime);
+            prev3DTime = now;
+
+            const instFps = 1000 / dt;
+            STATE.fps3D = STATE.fps3D ? (STATE.fps3D * 0.85 + instFps * 0.15) : instFps;
+            STATE.ms3D = STATE.ms3D ? (STATE.ms3D * 0.85 + dt * 0.15) : dt;
+
+            if (instFps > 1 && instFps < 400) {
+                STATE.samples3D.push(dt);
+                if (STATE.samples3D.length > 240) STATE.samples3D.shift();
+            }
+
+            // 30-Second Benchmark Progress
+            if (STATE.bench30Active) {
+                STATE.bench30Times.push(dt);
+                const elapsed = (now - STATE.bench30Start) / 1000;
+                const rem = Math.max(0, 30 - elapsed);
+                document.getElementById('bench30Timer').textContent = `${rem.toFixed(1)}s`;
+                document.getElementById('bench30Bar').style.width = `${Math.min(100, (elapsed / 30) * 100)}%`;
+
+                if (elapsed >= 30) {
+                    finish30sBenchmark();
+                }
+            }
+
+            if (!STATE.dragging) {
+                STATE.yaw += dt * 0.00045;
+            }
+
+            const cx = STATE.dist * Math.cos(STATE.pitch) * Math.sin(STATE.yaw);
+            const cy = STATE.dist * Math.sin(STATE.pitch);
+            const cz = STATE.dist * Math.cos(STATE.pitch) * Math.cos(STATE.yaw);
+
+            gl.uniform2f(uniforms.res, shaderCanvas.width, shaderCanvas.height);
+            gl.uniform1f(uniforms.time, now * 0.001);
+            gl.uniform3f(uniforms.camPos, cx, cy, cz);
+            gl.uniform1i(uniforms.maxSteps, STATE.maxSteps);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            if (now - last3DHudUpdate > 150) {
+                last3DHudUpdate = now;
+                const f = Math.round(STATE.fps3D);
+                const colorClass = f < 25 ? 'red' : f < 45 ? 'amber' : 'green';
+
+                const valFps = document.getElementById('val3dFps');
+                valFps.textContent = f;
+                valFps.className = `stat-value ${colorClass}`;
+
+                document.getElementById('hudLiveFps').textContent = `${f} FPS`;
+                document.getElementById('val3dMs').textContent = `${STATE.ms3D.toFixed(1)} ms`;
+
+                if (STATE.samples3D.length > 8) {
+                    const sorted = [...STATE.samples3D].sort((a, b) => b - a);
+                    const low1Ms = sorted[Math.floor(sorted.length * 0.01)] || STATE.ms3D;
+                    document.getElementById('val3dLow1').textContent = Math.max(1, Math.round(1000 / low1Ms));
+                }
+            }
+
+            STATE.raf3DId = requestAnimationFrame(loop3DShader);
+        }
+
+        function start3DShader() {
+            if (STATE.is3DRunning) return;
+            if (!setupWebGLContext()) {
+                showToast('WebGL not supported on this browser.');
+                return;
+            }
+
+            STATE.is3DRunning = true;
+            STATE.fps3D = 0;
+            STATE.samples3D = [];
+            resize3DCanvas();
+
+            document.getElementById('shaderIdleCover').classList.add('hidden');
+            document.getElementById('shaderHudPill').style.display = 'flex';
+            document.getElementById('shaderStatusBadge').className = 'badge red';
+            document.getElementById('shaderStatusBadge').textContent = 'RUNNING (GPU ACTIVE)';
+
+            const btn = document.getElementById('btnToggle3D');
+            btn.className = 'btn btn-stop';
+            btn.textContent = '⏹ STOP 3D SHADER';
+
+            document.getElementById('statusLed').classList.add('gpu-hot');
+            const banner = document.getElementById('gpuStateBanner');
+            banner.classList.add('gpu-hot');
+            banner.textContent = '● 3D GPU STRESS ACTIVE';
+
+            prev3DTime = performance.now();
+            STATE.raf3DId = requestAnimationFrame(loop3DShader);
+        }
+
+        function stop3DShader(autoPaused = false) {
+            STATE.is3DRunning = false;
+            STATE.bench30Active = false;
+            if (STATE.raf3DId) {
+                cancelAnimationFrame(STATE.raf3DId);
+                STATE.raf3DId = null;
+            }
+
+            document.getElementById('bench30Wrap').style.display = 'none';
+            document.getElementById('shaderIdleCover').classList.remove('hidden');
+            document.getElementById('shaderHudPill').style.display = 'none';
+            document.getElementById('shaderStatusBadge').className = 'badge';
+            document.getElementById('shaderStatusBadge').textContent = 'IDLE (0% GPU)';
+
+            const btn = document.getElementById('btnToggle3D');
+            btn.className = 'btn btn-start';
+            btn.textContent = '▶ START 3D SHADER';
+
+            document.getElementById('statusLed').classList.remove('gpu-hot');
+            const banner = document.getElementById('gpuStateBanner');
+            banner.classList.remove('gpu-hot');
+            banner.textContent = '● ZERO-LAG MODE (3D GPU IDLE)';
+
+            if (autoPaused) {
+                showToast('❄️ 3D Shader auto-paused to keep phone smooth!');
+            }
+        }
+
+        document.getElementById('btnToggle3D').addEventListener('click', () => {
+            if (STATE.is3DRunning) stop3DShader(false);
+            else start3DShader();
+        });
+
+        document.getElementById('btnOverlayStart').addEventListener('click', start3DShader);
+
+        // 30-Second GPU Benchmark
+        document.getElementById('btnBench30s').addEventListener('click', () => {
+            if (!STATE.is3DRunning) start3DShader();
+            STATE.bench30Active = true;
+            STATE.bench30Start = performance.now();
+            STATE.bench30Times = [];
+            document.getElementById('bench30Wrap').style.display = 'block';
+            document.getElementById('val3dScore').textContent = 'RUNNING...';
+            document.getElementById('val3dTier').textContent = 'TESTING';
+        });
+
+        function finish30sBenchmark() {
+            STATE.bench30Active = false;
+            document.getElementById('bench30Wrap').style.display = 'none';
+
+            if (STATE.bench30Times.length < 10) return;
+            const avgMs = STATE.bench30Times.reduce((a, b) => a + b, 0) / STATE.bench30Times.length;
+            const avgFps = 1000 / avgMs;
+            const loadFactor = (STATE.maxSteps / 48) * (STATE.resScale / 0.75);
+            const score = Math.round(avgFps * 120 * loadFactor);
+
+            const tier = score >= 14000 ? 'GODLIKE GPU' :
+                         score >= 9000  ? 'FLAGSHIP PRO' :
+                         score >= 5200  ? 'GAMING READY' : 'ENTRY / ECO';
+
+            STATE.gpuScore = score;
+            STATE.gpuTier = tier;
+
+            document.getElementById('val3dScore').textContent = `${score.toLocaleString()} PTS`;
+            document.getElementById('val3dTier').textContent = tier;
+            showToast(`🏆 30s GPU Score: ${score.toLocaleString()} (${tier})`);
+        }
+
+        // Presets, Steps & Resolution Controls
+        const PRESET_MAP = {
+            eco:      { steps: 48,  scale: 0.75 },
+            balanced: { steps: 80,  scale: 1.0  },
+            heavy:    { steps: 128, scale: 1.25 },
+            extreme:  { steps: 192, scale: 1.5  }
+        };
+
+        document.getElementById('presetQuality').addEventListener('change', (e) => {
+            const cfg = PRESET_MAP[e.target.value];
+            if (!cfg) return;
+            STATE.maxSteps = cfg.steps;
+            STATE.resScale = cfg.scale;
+            document.getElementById('sliderSteps').value = cfg.steps;
+            document.getElementById('lblSteps').textContent = `${cfg.steps} STEPS`;
+            document.getElementById('lblScale').textContent = `${cfg.scale}x`;
+            document.querySelectorAll('.pill-btn').forEach((b) => {
+                b.classList.toggle('active', Number(b.dataset.scale) === cfg.scale);
+            });
+            STATE.samples3D = [];
+            if (STATE.is3DRunning) resize3DCanvas();
+        });
+
+        document.getElementById('sliderSteps').addEventListener('input', (e) => {
+            STATE.maxSteps = Number(e.target.value);
+            document.getElementById('lblSteps').textContent = `${STATE.maxSteps} STEPS`;
+            STATE.samples3D = [];
+        });
+
+        document.querySelectorAll('.pill-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                STATE.resScale = Number(btn.dataset.scale);
+                document.getElementById('lblScale').textContent = `${STATE.resScale}x`;
+                STATE.samples3D = [];
+                if (STATE.is3DRunning) resize3DCanvas();
+            });
+        });
+
+        // Touch & Mouse 3D Orbit inside Canvas
+        shaderCanvas.addEventListener('pointerdown', (e) => {
+            STATE.dragging = true;
+            STATE.lastX = e.clientX;
+            STATE.lastY = e.clientY;
+        });
+        window.addEventListener('pointermove', (e) => {
+            if (!STATE.dragging || !STATE.is3DRunning) return;
+            STATE.yaw -= (e.clientX - STATE.lastX) * 0.008;
+            STATE.pitch = Math.max(-1.35, Math.min(1.35, STATE.pitch + (e.clientY - STATE.lastY) * 0.008));
+            STATE.lastX = e.clientX;
+            STATE.lastY = e.clientY;
+        });
+        window.addEventListener('pointerup', () => { STATE.dragging = false; });
+
+        /* ==========================================================================
+           5. TAB 3: CPU, RAM & STORAGE SPEED BENCHMARKS
+           ========================================================================== */
+        document.getElementById('btnRunCpu').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true;
+            btn.textContent = '⏳ TESTING CPU CORES...';
+
+            const workerCode = `
+                self.onmessage = function(ev) {
+                    const end = performance.now() + ev.data.ms;
+                    let ops = 0, a = 1.001, b = 0.999;
+                    while (performance.now() < end) {
+                        for (let i = 0; i < 2000; i++) {
+                            a = Math.sin(a + i * 0.001) * Math.cos(b) + 1.0001;
+                            b = Math.sqrt(Math.abs(a * b) + 1.234);
+                            ops += 6;
+                        }
+                    }
+                    self.postMessage(ops);
+                };
+            `;
+            const blobUrl = URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' }));
+
+            const runWorkers = (count, ms) => new Promise((resolve) => {
+                let done = 0, totalOps = 0;
+                for (let i = 0; i < count; i++) {
+                    const w = new Worker(blobUrl);
+                    w.onmessage = (m) => {
+                        totalOps += m.data;
+                        w.terminate();
+                        if (++done === count) resolve(totalOps);
+                    };
+                    w.postMessage({ ms });
+                }
+            });
+
+            try {
+                const singleOps = await runWorkers(1, 750);
+                STATE.cpuSingle = Math.round(singleOps / 16000);
+                document.getElementById('cpuSingleScore').textContent = STATE.cpuSingle.toLocaleString();
+
+                const multiOps = await runWorkers(STATE.cpuCores, 1000);
+                STATE.cpuMulti = Math.round(multiOps / 20000);
+                STATE.cpuGflops = (multiOps / 1e9).toFixed(2);
+
+                document.getElementById('cpuMultiScore').textContent = STATE.cpuMulti.toLocaleString();
+                document.getElementById('cpuGflopsVal').textContent = `${STATE.cpuGflops} GFLOPS`;
+                showToast(`🧠 CPU Score: ${STATE.cpuMulti.toLocaleString()} (${STATE.cpuGflops} GFLOPS)`);
+            } finally {
+                URL.revokeObjectURL(blobUrl);
+                btn.disabled = false;
+                btn.textContent = '🚀 RE-RUN CPU SINGLE & MULTI-CORE TEST';
+            }
+        });
+
+        // RAM Bandwidth Sweep
+        document.getElementById('btnRunRam').addEventListener('click', (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true;
+
+            if (performance.memory) {
+                const used = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
+                document.getElementById('ramHeapVal').textContent = `${used} MB`;
+            } else {
+                document.getElementById('ramHeapVal').textContent = 'Active';
+            }
+
+            const t0 = performance.now();
+            const arr = new Float64Array(8 * 1024 * 1024); // 64 MB
+            for (let i = 0; i < arr.length; i += 8) {
+                arr[i] = i * 0.25;
+            }
+            const elapsedSec = Math.max(0.002, (performance.now() - t0) / 1000);
+            const gbps = (0.064 / elapsedSec).toFixed(1);
+            STATE.ramSpeed = `${gbps} GB/s`;
+            document.getElementById('ramSpeedVal').textContent = STATE.ramSpeed;
+            showToast(`⚡ RAM Bandwidth: ${STATE.ramSpeed}`);
+            setTimeout(() => { btn.disabled = false; }, 350);
+        });
+
+        // Storage Read/Write Speed (IndexedDB 8MB block)
+        document.getElementById('btnRunDisk').addEventListener('click', (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true;
+            document.getElementById('diskWriteVal').textContent = 'Testing...';
+            document.getElementById('diskReadVal').textContent = 'Testing...';
+
+            const req = indexedDB.open('AetherLite_DiskTest', 1);
+            req.onupgradeneeded = () => req.result.createObjectStore('store');
+            req.onsuccess = () => {
+                const db = req.result;
+                const data = new Uint8Array(8 * 1024 * 1024); // 8 MB
+                const t0 = performance.now();
+                const tx = db.transaction('store', 'readwrite');
+                tx.objectStore('store').put(data, 'bench8mb');
+                tx.oncomplete = () => {
+                    const writeSec = Math.max(0.005, (performance.now() - t0) / 1000);
+                    STATE.diskWrite = `${Math.round(8 / writeSec)} MB/s`;
+                    document.getElementById('diskWriteVal').textContent = STATE.diskWrite;
+
+                    const t1 = performance.now();
+                    const rtx = db.transaction('store', 'readonly');
+                    const getReq = rtx.objectStore('store').get('bench8mb');
+                    getReq.onsuccess = () => {
+                        const readSec = Math.max(0.005, (performance.now() - t1) / 1000);
+                        STATE.diskRead = `${Math.round(8 / readSec)} MB/s`;
+                        document.getElementById('diskReadVal').textContent = STATE.diskRead;
+                        db.close();
+                        indexedDB.deleteDatabase('AetherLite_DiskTest');
+                        btn.disabled = false;
+                        showToast(`💽 Storage: Write ${STATE.diskWrite} | Read ${STATE.diskRead}`);
+                    };
+                };
+            };
+        });
+
+        /* ==========================================================================
+           6. TAB 4: WI-FI PING, SPEED & TOUCH POLLING / REFLEX LAB
+           ========================================================================== */
+        async function runPingBurst() {
+            const rtts = [];
+            for (let i = 0; i < 6; i++) {
+                const t0 = performance.now();
+                try {
+                    await fetch(`https://www.cloudflare.com/cdn-cgi/trace?t=${Date.now()}_${i}`, {
+                        mode: 'no-cors',
+                        cache: 'no-store'
+                    });
+                    rtts.push(Math.round(performance.now() - t0));
+                } catch {
+                    // ignore failed sample
+                }
+            }
+
+            if (rtts.length > 0) {
+                const avg = Math.round(rtts.reduce((a, b) => a + b, 0) / rtts.length);
+                let jitter = 0;
+                for (let i = 1; i < rtts.length; i++) {
+                    jitter += Math.abs(rtts[i] - rtts[i - 1]);
+                }
+                jitter = rtts.length > 1 ? Math.round(jitter / (rtts.length - 1)) : 0;
+
+                STATE.pingMs = avg;
+                STATE.jitterMs = jitter;
+
+                const pEl = document.getElementById('netPing');
+                pEl.textContent = `${avg} ms`;
+                pEl.className = `stat-value ${avg < 45 ? 'green' : avg < 95 ? 'amber' : 'red'}`;
+                document.getElementById('netJitter').textContent = `${jitter} ms`;
+
+                const badge = document.getElementById('netStatusBadge');
+                if (avg < 45 && jitter < 15) {
+                    badge.className = 'badge green';
+                    badge.textContent = 'ESPORTS READY';
+                } else if (avg < 95) {
+                    badge.className = 'badge amber';
+                    badge.textContent = 'GOOD GAMING';
+                } else {
+                    badge.className = 'badge red';
+                    badge.textContent = 'HIGH PING';
+                }
+            }
+        }
+
+        document.getElementById('btnPingBurst').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true;
+            btn.textContent = '📶 PINGING...';
+            await runPingBurst();
+            btn.disabled = false;
+            btn.textContent = '📶 PING & JITTER TEST';
+            if (STATE.pingMs !== null) showToast(`📡 Ping: ${STATE.pingMs}ms | Jitter: ${STATE.jitterMs}ms`);
+        });
+
+        document.getElementById('btnSpeedTest').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true;
+            btn.textContent = '⚡ TESTING SPEED...';
+            try {
+                const t0 = performance.now();
+                const res = await fetch(`https://speed.cloudflare.com/__down?bytes=5000000&r=${Math.random()}`, {
+                    cache: 'no-store'
+                });
+                const blob = await res.blob();
+                const sec = Math.max(0.05, (performance.now() - t0) / 1000);
+                const mbps = ((blob.size * 8) / sec / (1024 * 1024)).toFixed(1);
+                STATE.downMbps = `${mbps} Mbps`;
+                document.getElementById('netSpeed').textContent = STATE.downMbps;
+                showToast(`⚡ Download Speed: ${STATE.downMbps}`);
+            } catch {
+                const conn = navigator.connection;
+                STATE.downMbps = conn && conn.downlink ? `~${conn.downlink} Mbps` : 'Blocked';
+                document.getElementById('netSpeed').textContent = STATE.downMbps;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '⚡ DOWNLOAD SPEED';
+            }
+        });
+
+        // Touch Polling Rate (Hz) Pad
+        const touchPollPad = document.getElementById('touchPollPad');
+        let pollTimes = [];
+        function trackTouchHz() {
+            const now = performance.now();
+            pollTimes.push(now);
+            if (pollTimes.length > 35) pollTimes.shift();
+            if (pollTimes.length >= 8) {
+                const span = pollTimes[pollTimes.length - 1] - pollTimes[0];
+                if (span > 25) {
+                    const hz = Math.round(((pollTimes.length - 1) / span) * 1000);
+                    STATE.peakTouchHz = Math.max(STATE.peakTouchHz, hz);
+                    document.getElementById('pollLiveVal').textContent = `${hz} Hz`;
+                    document.getElementById('pollPeakBadge').textContent = `PEAK: ${STATE.peakTouchHz} HZ`;
+                }
+            }
+        }
+        touchPollPad.addEventListener('pointermove', trackTouchHz);
+        touchPollPad.addEventListener('touchmove', trackTouchHz, { passive: true });
+
+        // Reflex Time Tester
+        const reflexPad = document.getElementById('reflexPad');
+        let reflexMode = 'idle';
+        let reflexTimer = null;
+        let reflexStart = 0;
+
+        reflexPad.addEventListener('pointerdown', () => {
+            if (reflexMode === 'idle') {
+                reflexMode = 'wait';
+                reflexPad.className = 'interactive-pad wait';
+                reflexPad.textContent = '⏳ WAIT FOR GREEN...';
+                reflexTimer = setTimeout(() => {
+                    reflexMode = 'go';
+                    reflexStart = performance.now();
+                    reflexPad.className = 'interactive-pad go';
+                    reflexPad.textContent = '⚡ TAP NOW! ⚡';
+                }, 1200 + Math.random() * 2000);
+            } else if (reflexMode === 'wait') {
+                clearTimeout(reflexTimer);
+                reflexMode = 'idle';
+                reflexPad.className = 'interactive-pad';
+                reflexPad.textContent = '❌ TOO EARLY! TAP TO TRY AGAIN';
+            } else if (reflexMode === 'go') {
+                const ms = Math.round(performance.now() - reflexStart);
+                reflexMode = 'idle';
+                reflexPad.className = 'interactive-pad';
+                reflexPad.textContent = `🎯 ${ms} MS — TAP TO TEST AGAIN`;
+                if (STATE.bestReflexMs === null || ms < STATE.bestReflexMs) {
+                    STATE.bestReflexMs = ms;
+                    document.getElementById('reflexBestBadge').textContent = `BEST: ${ms} MS`;
+                }
+            }
+        });
+
+        /* ==========================================================================
+           7. COPY FULL DEVICE SPEC TO CLIPBOARD
+           ========================================================================== */
+        document.getElementById('btnCopyAll').addEventListener('click', () => {
+            const text = [
+                '=== AETHER-X LITE // DEVICE & BENCHMARK REPORT ===',
+                `GPU: ${STATE.gpuModel}`,
+                `CPU: ${STATE.cpuCores} Cores (${STATE.osName}) | Single: ${STATE.cpuSingle || 'N/A'} | Multi: ${STATE.cpuMulti || 'N/A'} (${STATE.cpuGflops || '--'} GFLOPS)`,
+                `3D Volume Shader Score: ${STATE.gpuScore ? `${STATE.gpuScore.toLocaleString()} PTS [${STATE.gpuTier}]` : 'Not Run'}`,
+                `Display & Touch: ${screen.width}x${screen.height} @ ${STATE.uiHz}Hz | Peak Touch: ${STATE.peakTouchHz || '--'}Hz`,
+                `RAM & Storage: ${STATE.ramLabel} (${STATE.ramSpeed || 'Untested'}) | Disk: W ${STATE.diskWrite || '--'} / R ${STATE.diskRead || '--'}`,
+                `Network: Ping ${STATE.pingMs ?? '--'}ms | Jitter ${STATE.jitterMs ?? '--'}ms | Speed ${STATE.downMbps || 'N/A'}`,
+                '==================================================='
+            ].join('\n');
+
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                showToast('📋 Device & Benchmark Specs Copied!');
+            } catch {
+                showToast('Clipboard blocked.');
+            }
+            document.body.removeChild(ta);
+        });
+
+        window.addEventListener('load', () => {
+            initSystemTelemetry();
+        });
+    </script>
+</body>
+</html>
